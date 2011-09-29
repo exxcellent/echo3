@@ -171,6 +171,16 @@
                 <pathelement path="${servlet.lib.jar}"/>
             </classpath>
         </available>
+        <available property="yuicompressor.api.available" classname="com.yahoo.platform.yui.compressor.JavaScriptCompressor">
+            <classpath>
+               <pathelement path="${yuicompressor.lib.jar}"/>
+            </classpath>
+        </available>
+        <available property="rhino.api.available" classname="org.mozilla.javascript.ErrorReporter">
+            <classpath>
+                <pathelement path="${rhino.lib.jar}"/>
+            </classpath>
+        </available>
     </target>
     
     <target name="verify.servlet.api" depends="checkenv" unless="servlet.api.available">
@@ -180,17 +190,35 @@
         <echo message="Specified JAR = ${servlet.lib.jar}"/>
         <fail message="${servlet.lib.msg}"/>
     </target>
+
+    <target name="verify.yuicompressor.api" depends="checkenv" unless="yuicompressor.api.available">
+        <echo message="************************************************************"/>
+        <echo message="*         YUI Compressor API not found in build classpath  *"/>
+        <echo message="************************************************************"/>
+        <echo message="Specified JAR = ${yuicompressor.lib.jar}"/>
+        <fail message="${yuicompressor.lib.msg}"/>
+    </target>
+
+    <target name="verify.rhino.api" depends="checkenv" unless="rhino.api.available">
+        <echo message="************************************************************"/>
+        <echo message="*         Mozilla Rhino API not found in build classpath   *"/>
+        <echo message="************************************************************"/>
+        <echo message="Specified JAR = ${rhino.lib.jar}"/>
+        <fail message="${rhino.lib.msg}"/>
+    </target>
     
     <target name="compile.webcontainer" depends="verify.servlet.api,compile.webcontainer.impl" 
         description="Compile Echo Web Application Container"/>
     
-    <target name="compile.webcontainer.impl" depends="verify.servlet.api, compile.app">
+    <target name="compile.webcontainer.impl" depends="verify.servlet.api, verify.yuicompressor.api, verify.rhino.api, compile.app">
         <mkdir dir="${dir.build.server-java.webcontainer}"/>
         <javac srcdir="${dir.src.server-java.webcontainer}" destdir="${dir.build.server-java.webcontainer}" 
                 debug="${debug}" deprecation="yes" source="${ant.build.javac.source}" target="${ant.build.javac.target}">
             <classpath>
                 <pathelement path="${dir.build.server-java.app}"/>
                 <pathelement path="${servlet.lib.jar}"/>
+                <pathelement path="${rhino.lib.jar}"/>
+                <pathelement path="${yuicompressor.lib.jar}"/>
             </classpath>
         </javac>
         <copy todir="${dir.build.server-java.webcontainer}">
@@ -221,6 +249,8 @@
                 <pathelement path="${dir.dist.lib}/${jarfile.echo.app}"/>
                 <pathelement path="${dir.dist.lib}/${jarfile.echo.webcontainer}"/>
                 <pathelement path="${servlet.lib.jar}"/>
+                <pathelement path="${rhino.lib.jar}"/>
+                <pathelement path="${yuicompressor.lib.jar}"/>
             </classpath>
         </javac>
         <copy todir="${dir.build.server-java.webcontainer-test}">

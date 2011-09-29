@@ -27,238 +27,73 @@
 
 package nextapp.echo.webcontainer.util;
 
-/**
- * Compresses a String containing JavaScript by removing comments and 
- * whitespace.
- */
+import java.io.StringReader;
+import java.io.StringWriter;
+
+import org.mozilla.javascript.ErrorReporter;
+import org.mozilla.javascript.EvaluatorException;
+
+/** Compresses a String using the Yahoo JS Compressor and Mozilla Rhino. */
 public class JavaScriptCompressor {
 
-    private static final char LINE_FEED = '\n';
-    private static final char CARRIAGE_RETURN = '\r';
-    private static final char SPACE = ' ';
-    private static final char TAB = '\t';
-
     /**
-     * Compresses a String containing JavaScript by removing comments and 
-     * whitespace.
-     * 
+     * Compresses a String containing JavaScript by removing comments and whitespace.
+     *
      * @param script the String to compress
      * @return a compressed version
      */
     public static String compress(String script) {
-        JavaScriptCompressor jsc = new JavaScriptCompressor(script);
-        return jsc.outputBuffer.toString();
+        try {
+            StringReader scriptReader = new StringReader(script);
+            CountingErrorReporter errorReporter = new CountingErrorReporter();
+            com.yahoo.platform.yui.compressor.JavaScriptCompressor jsc =
+                    new com.yahoo.platform.yui.compressor.JavaScriptCompressor(scriptReader, errorReporter);
+            StringWriter scriptWriter = new StringWriter();
+            jsc.compress(scriptWriter, -1, true, false, false, false);
+            if (errorReporter.isClean()) {
+                return scriptWriter.getBuffer().toString();
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        // Fallback in case of problems
+        return script;
     }
 
-    /** Original JavaScript text. */
-    private String script;
-    
-    /** 
-     * Compressed output buffer.
-     * This buffer may only be modified by invoking the <code>append()</code>
-     * method.
-     */
-    private StringBuffer outputBuffer;
-    
-    /** Current parser cursor position in original text. */
-    private int pos;
-    
-    /** Character at parser cursor position. */
-    private char ch;
-    
-    /** Last character appended to buffer. */
-    private char lastAppend;
+    private static class CountingErrorReporter implements ErrorReporter {
 
-    /** Flag indicating if end-of-buffer has been reached. */
-    private boolean endReached;
+        int problems = 0;
 
-    /** Flag indicating whether content has been appended after last identifier. */
-    private boolean contentAppendedAfterLastIdentifier = true;
-
-    /**
-     * Creates a new <code>JavaScriptCompressor</code> instance.
-     * 
-     * @param script
-     */
-    private JavaScriptCompressor(String script) {
-        this.script = script;
-        outputBuffer = new StringBuffer(script.length());
-        nextChar();
-
-        while (!endReached) {
-            if (Character.isJavaIdentifierStart(ch)) {
-                renderIdentifier();
-            } else if (ch == ' ') {
-                skipWhiteSpace();
-            } else if (isWhitespace()) {
-                // Compress whitespace
-                skipWhiteSpace();
-            } else if (ch == '\\') {
-                // Skip backslash and subsequent character.
-                append(ch);
-                nextChar();
-                append(ch);
-                nextChar();
-            } else if ((ch == '"') || (ch == '\'')) {
-                // Handle strings
-                renderString();
-            } else if (ch == '/') {
-                // Handle comments
-                nextChar();
-                if (ch == '/') {
-                    nextChar();
-                    skipLineComment();
-                } else if (ch == '*') {
-                    nextChar();
-                    skipBlockComment();
-                } else {
-                    append('/');
-                }
+        public void warning(String message, String sourceName,
+                            int line, String lineSource, int lineOffset) {
+            if (line < 0) {
+                System.err.println("\n[WARNING] " + message);
             } else {
-                append(ch);
-                nextChar();
+                System.err.println("\n[WARNING] " + line + ':' + lineOffset + ':' + message);
             }
+            System.err.println("[ERROR] source code line: "+lineSource);
+            problems++;
         }
-    }
 
-    /**
-     * Append character to output.
-     * 
-     * @param ch the character to append
-     */
-    private void append(char ch) {
-        lastAppend = ch;
-        outputBuffer.append(ch);
-        contentAppendedAfterLastIdentifier = true;
-    }
-    
-    /**
-     * Determines if current character is whitespace.
-     * 
-     * @return true if the character is whitespace
-     */
-    private boolean isWhitespace() {
-        return ch == CARRIAGE_RETURN || ch == SPACE || ch == TAB || ch == LINE_FEED;        
-    }
-
-    /**
-     * Load next character.
-     */
-    private void nextChar() {
-        if (!endReached) {
-            if (pos < script.length()) {
-                ch = script.charAt(pos++);
+        public void error(String message, String sourceName,
+                          int line, String lineSource, int lineOffset) {
+            if (line < 0) {
+                System.err.println("\n[ERROR] " + message);
             } else {
-                endReached = true;
-                ch = 0;
+                System.err.println("\n[ERROR] " + line + ':' + lineOffset + ':' + message);
             }
+            System.err.println("[ERROR] source code line: "+lineSource);
+            problems++;
         }
-    }
 
-    /**
-     * Adds an identifier to output.
-     */
-    private void renderIdentifier() {
-        if (!contentAppendedAfterLastIdentifier)
-            append(SPACE);
-        append(ch);
-        nextChar();
-        while (Character.isJavaIdentifierPart(ch)) {
-            append(ch);
-            nextChar();
+        public EvaluatorException runtimeError(String message, String sourceName,
+                                               int line, String lineSource, int lineOffset) {
+            error(message, sourceName, line, lineSource, lineOffset);
+            return new EvaluatorException(message);
         }
-        contentAppendedAfterLastIdentifier = false;
-    }
 
-    /**
-     * Adds quoted String starting at current character to output.
-     */
-    private void renderString() {
-        char startCh = ch; // Save quote char
-        append(ch);
-        nextChar();
-        while (true) {
-            if ((ch == LINE_FEED) || (ch == CARRIAGE_RETURN) || (endReached)) {
-                // JavaScript error: string not terminated
-                return;
-            } else {
-                if (ch == '\\') {
-                    append(ch);
-                    nextChar();
-                    if ((ch == LINE_FEED) || (ch == CARRIAGE_RETURN) || (endReached)) {
-                        // JavaScript error: string not terminated
-                        return;
-                    }
-                    append(ch);
-                    nextChar();
-                } else {
-                    append(ch);
-                    if (ch == startCh) {
-                        nextChar();
-                        return;
-                    }
-                    nextChar();
-                }
-            }
-        }
-    }
-
-    /**
-     * Moves cursor past a line comment.
-     */
-    private void skipLineComment() {
-        while ((ch != CARRIAGE_RETURN) && (ch != LINE_FEED)) {
-            if (endReached) {
-                return;
-            }
-            nextChar();
-        }
-    }
-
-    /**
-     * Moves cursor past a block comment.
-     */
-    private void skipBlockComment() {
-        while (true) {
-            if (endReached) {
-                return;
-            }
-            if (ch == '*') {
-                nextChar();
-                if (ch == '/') {
-                    nextChar();
-                    return;
-                }
-            } else
-                nextChar();
-        }
-    }
-    
-    /**
-     * Renders a new line character, provided previously rendered character 
-     * is not a newline.
-     */
-    private void renderNewLine() {
-        if (lastAppend != '\n' && lastAppend != '\r') {
-            append('\n');
-        }
-    }
-    
-    /**
-     * Moves cursor past white space (including newlines).
-     */
-    private void skipWhiteSpace() {
-        if (ch == LINE_FEED || ch == CARRIAGE_RETURN) {
-            renderNewLine();
-        } else {
-            append(ch);
-        }
-        nextChar();
-        while (ch == LINE_FEED || ch == CARRIAGE_RETURN || ch == SPACE || ch == TAB) {
-            if (ch == LINE_FEED || ch == CARRIAGE_RETURN) {
-                renderNewLine();
-            }
-            nextChar();
+        public boolean isClean() {
+            return problems == 0;
         }
     }
 }
