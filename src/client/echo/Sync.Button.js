@@ -205,7 +205,7 @@ Echo.Sync.Button = Core.extend(Echo.Render.ComponentSync, {
         if (!this.client || !this.client.verifyInput(this.component)) {
             return true;
         }
-        if ((e.keyCode == 0  && e.charCode == 32) || e.keyCode == 32 ) {        	
+        if ((e.keyCode === 0  && e.charCode == 32) || e.keyCode == 32 ) {
             this.doAction();
             return false;
         } else {
