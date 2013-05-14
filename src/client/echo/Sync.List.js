@@ -351,8 +351,6 @@ Echo.Sync.ListComponent = Core.extend(Echo.Render.ComponentSync, {
      * @param {Element} parent the parent DOM element 
      */
     _renderMainAsSelect: function(update, parentElement) {
-        this._div = document.createElement("div");
-    
         this._element = document.createElement("select");
         this._element.id = this.component.renderId;
         this._element.size = this.listBox ? 6 : 1;
@@ -419,9 +417,7 @@ Echo.Sync.ListComponent = Core.extend(Echo.Render.ComponentSync, {
             Core.Web.Event.add(this._element, "focus", Core.method(this, this._processFocus), false);
         }
 
-        this._div.appendChild(this._element);
-
-        parentElement.appendChild(this._div);
+        parentElement.appendChild(this._element);
     },
 
     /**
