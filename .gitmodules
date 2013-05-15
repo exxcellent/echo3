@@ -1,4 +1,4 @@
 [submodule "lib"]
 	path = lib
-	url = git@github.com:echo3/echo-dependencies.git
+	url = https://github.com/echo3/echo-dependencies.git
 
