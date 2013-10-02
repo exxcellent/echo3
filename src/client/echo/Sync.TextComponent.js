@@ -471,6 +471,7 @@ Echo.Sync.TextArea = Core.extend(Echo.Sync.TextComponent, {
     renderAdd: function(update, parentElement) {
         this.input = document.createElement("textarea");
         this.input.id = this.component.renderId;
+        this.input.className = this.component.render("cssClasses", "");
         if (!this.component.render("editable", true)) {
             this.input.readOnly = true;
         }

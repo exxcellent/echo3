@@ -73,6 +73,7 @@ Echo.Sync.ContentPane = Core.extend(Echo.Render.ComponentSync, {
         
         this._div = document.createElement("div");
         this._div.id = this.component.renderId;
+        this._div.className = this.component.render("cssClasses", "");
         this._div.style.position = "absolute";
         this._div.style.width = "100%";
         this._div.style.height = "100%";

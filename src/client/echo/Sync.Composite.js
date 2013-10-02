@@ -26,6 +26,7 @@ Echo.Sync.Composite = Core.extend(Echo.Render.ComponentSync, {
     renderAdd: function(update, parentElement) {
         this.div = this.contentDiv = document.createElement("div");
         this.div.id = this.component.renderId;
+        this.div.className = this.component.render("cssClasses", "");
         
         if (this.component.children.length !== 0) {
             this.renderStyle();

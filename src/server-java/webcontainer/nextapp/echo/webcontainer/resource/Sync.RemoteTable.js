@@ -137,8 +137,10 @@ Echo.Sync.RemoteTableSync = Core.extend(Echo.Render.ComponentSync, {
         var tr = document.createElement("tr");
     
         var tdPrototype = document.createElement("td");
-        Echo.Sync.Border.render(this.component.render("border"), tdPrototype);
-        tdPrototype.style.padding = this._defaultCellPadding;
+        if (!this._div.className) {
+            Echo.Sync.Border.render(this.component.render("border"), tdPrototype);
+            tdPrototype.style.padding = this._defaultCellPadding;
+        }
     
         for (var columnIndex = 0; columnIndex < this._columnCount; columnIndex++) {
             var td = tdPrototype.cloneNode(false);
@@ -273,6 +275,7 @@ Echo.Sync.RemoteTableSync = Core.extend(Echo.Render.ComponentSync, {
         }
         
         this._div = document.createElement("div");
+        this._div.className = this.component.render("cssClasses", '');
         this._div.id = this.component.renderId;
         
         this._table = document.createElement("table");
@@ -280,6 +283,7 @@ Echo.Sync.RemoteTableSync = Core.extend(Echo.Render.ComponentSync, {
         if (this._selectionEnabled) {
             this._table.style.cursor = "pointer";
         }
+
         Echo.Sync.renderComponentDefaults(this.component, this._table);
         
         var border = this.component.render("border");
@@ -431,20 +435,25 @@ Echo.Sync.RemoteTableSync = Core.extend(Echo.Render.ComponentSync, {
         
         while (columnIndex < this._columnCount) {
             var child = this.component.getComponent((rowIndex + (this._headerVisible ? 1 : 0)) * this._columnCount + columnIndex);
-            var layoutData = child.render("layoutData");
-            
-            if (layoutData) {
-                if (Core.Web.Env.QUIRK_TABLE_CELL_WIDTH_EXCLUDES_PADDING && this._columnWidths && 
-                        this._columnWidths[columnIndex]) { 
-                    var cellInsets = Echo.Sync.Insets.toPixels(layoutData.insets);
-                    if (this._defaultPixelInsets.left + this._defaultPixelInsets.right < cellInsets.left + cellInsets.right) {
-                        td.style.width = (this._columnWidths[columnIndex] - cellInsets.left - cellInsets.right) + "px";
+
+            if (!this._div.className) {
+                var layoutData = child.render("layoutData");
+
+                if (layoutData) {
+                    if (Core.Web.Env.QUIRK_TABLE_CELL_WIDTH_EXCLUDES_PADDING && this._columnWidths &&
+                            this._columnWidths[columnIndex]) {
+                        var cellInsets = Echo.Sync.Insets.toPixels(layoutData.insets);
+                        if (this._defaultPixelInsets.left + this._defaultPixelInsets.right < cellInsets.left + cellInsets.right) {
+                            td.style.width = (this._columnWidths[columnIndex] - cellInsets.left - cellInsets.right) + "px";
+                        }
                     }
+                    Echo.Sync.Insets.render(layoutData.insets, td, "padding");
+                    Echo.Sync.Alignment.render(layoutData.alignment, td, true, this.component);
+                    Echo.Sync.FillImage.render(layoutData.backgroundImage, td);
+                    Echo.Sync.Color.render(layoutData.background, td, "backgroundColor");
                 }
-                Echo.Sync.Insets.render(layoutData.insets, td, "padding");
-                Echo.Sync.Alignment.render(layoutData.alignment, td, true, this.component);
-                Echo.Sync.FillImage.render(layoutData.backgroundImage, td);
-                Echo.Sync.Color.render(layoutData.background, td, "backgroundColor");
+            } else {
+                tr.className = rowIndex % 2 === 0 ? 'even' : 'odd';
             }
     
             Echo.Render.renderComponentAdd(update, child, td);

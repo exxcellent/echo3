@@ -639,6 +639,7 @@ Echo.Sync.WindowPane = Core.extend(Echo.Render.ComponentSync, {
         // Create main component DIV.
         this._div = Echo.Sync.FillImageBorder.renderContainer(border, { absolute: true });
         this._div.id = this.component.renderId;
+        this._div.className = this.component.render("cssClasses", "");
         this._div.tabIndex = "0";
         this._div.style.outlineStyle = "none";
         this._div.style.overflow = "hidden";

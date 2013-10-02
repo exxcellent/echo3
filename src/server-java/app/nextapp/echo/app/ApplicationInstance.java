@@ -603,7 +603,7 @@ implements Serializable {
             }
             serverUpdateManager.processComponentVisibilityUpdate(parent);
         } else {
-            if (oldValue != null && newValue != null && oldValue.equals(newValue)) {
+            if ((oldValue != null && newValue != null && oldValue.equals(newValue)) || (oldValue == null && newValue == null)) {
                 return;
             }
             if (parent instanceof ModalSupport && ModalSupport.MODAL_CHANGED_PROPERTY.equals(propertyName)) {

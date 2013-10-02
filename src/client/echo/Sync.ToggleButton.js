@@ -80,6 +80,10 @@ Echo.Sync.ToggleButton = Core.extend(Echo.Sync.Button, {
     
     /** @see Echo.Sync.Button.renderContent */
     renderContent: function() {
+        if (this.div.className) {
+            this._stateElement = this._renderButtonState(this.div);
+            return;
+        }
         var text = this.component.render("text");
         var icon = this.component.render("icon");
         var orientation, margin, tct;
@@ -140,12 +144,9 @@ Echo.Sync.ToggleButton = Core.extend(Echo.Sync.Button, {
      * @type Element
      */
     _renderButtonState: function(parent) {
-        var stateIcon = this.getStateIcon();
         var stateElement;
-        if (stateIcon) {
-            stateElement = document.createElement("img");
-            Echo.Sync.ImageReference.renderImg(stateIcon, stateElement);
-        } else {
+        var labelElement;
+        if (this.div.className) {
             stateElement = document.createElement("input");
             stateElement.type = this.inputType;
             if (this.inputType == "radio") {
@@ -153,13 +154,36 @@ Echo.Sync.ToggleButton = Core.extend(Echo.Sync.Button, {
             }
             stateElement.defaultChecked = this._selected ? true : false;
             stateElement.disabled = !this.enabled;
+
+            var cssClasses = this.component.render('cssClasses', '');
+            this.div.className = cssClasses + (this._selected ? ' selected' : '');
+
             Core.Web.Event.add(stateElement, "change", Core.method(this, this._processStateChange), false);
             Core.Web.Event.add(this.div, "click", Core.method(this, this._processStateChange), false);
+        } else {
+            var stateIcon = this.getStateIcon();
+            if (stateIcon) {
+                stateElement = document.createElement("img");
+                Echo.Sync.ImageReference.renderImg(stateIcon, stateElement);
+            } else {
+                stateElement = document.createElement("input");
+                stateElement.type = this.inputType;
+                if (this.inputType == "radio") {
+                    stateElement.name = "__echo_" + Echo.Sync.RadioButton._nextNameId++;
+                }
+                stateElement.defaultChecked = this._selected ? true : false;
+                stateElement.disabled = !this.enabled;
+                Core.Web.Event.add(stateElement, "change", Core.method(this, this._processStateChange), false);
+                Core.Web.Event.add(this.div, "click", Core.method(this, this._processStateChange), false);
+            }
         }
         parent.appendChild(stateElement);
-        var stateAlignment = this.component.render("stateAlignment"); 
-        if (stateAlignment) {
-            Echo.Sync.Alignment.render(stateAlignment, parent, true, this.component);
+
+        if (!this.div.className) {
+            var stateAlignment = this.component.render("stateAlignment");
+            if (stateAlignment) {
+                Echo.Sync.Alignment.render(stateAlignment, parent, true, this.component);
+            }
         }
         
         return stateElement;
@@ -168,12 +192,17 @@ Echo.Sync.ToggleButton = Core.extend(Echo.Sync.Button, {
     /** @see Echo.Sync.Button#setHighlightState */
     setHighlightState: function(rollover, pressed) {
         Echo.Sync.Button.prototype.setHighlightState.call(this, rollover, pressed);
-        var stateIcon = this.getStateIcon(rollover, pressed);
-        if (stateIcon) {
-            var url = Echo.Sync.ImageReference.getUrl(stateIcon);
-            if (this._stateElement.src != url) {
-                this._stateElement.src = url;
+        var cssClasses = this.component.render('cssClasses', '');
+        if (!cssClasses) {
+            var stateIcon = this.getStateIcon(rollover, pressed);
+            if (stateIcon) {
+                var url = Echo.Sync.ImageReference.getUrl(stateIcon);
+                if (this._stateElement.src != url) {
+                    this._stateElement.src = url;
+                }
             }
+        } else {
+            this.div.className = cssClasses + (this._selected ? ' selected' : '') + (rollover ? ' rollover' : '') + (pressed ? ' pressed' : '');
         }
     },
     
@@ -196,11 +225,17 @@ Echo.Sync.ToggleButton = Core.extend(Echo.Sync.Button, {
      * Updates the image/checked state of the state element in response to the state having changed.
      */
     _updateStateElement: function() {
-        var stateIcon = this.getStateIcon();
-        if (stateIcon) {
-            this._stateElement.src = Echo.Sync.ImageReference.getUrl(stateIcon);
+        var cssClasses = this.component.render('cssClasses', '');
+        if (!cssClasses) {
+            var stateIcon = this.getStateIcon();
+            if (stateIcon) {
+                this._stateElement.src = Echo.Sync.ImageReference.getUrl(stateIcon);
+            } else {
+                this._stateElement.checked = this._selected ? true : false;
+            }
         } else {
             this._stateElement.checked = this._selected ? true : false;
+            this.div.className = cssClasses + (this._selected ? ' selected' : '');
         }
     }
 });

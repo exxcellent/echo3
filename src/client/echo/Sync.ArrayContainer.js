@@ -278,6 +278,7 @@ Echo.Sync.Column = Core.extend(Echo.Sync.ArrayContainer, {
         this.element.id = this.component.renderId;
         this.element.style.outlineStyle = "none";
         this.element.tabIndex = "-1";
+        this.element.className = this.component.render("cssClasses", "");
     
         Echo.Sync.renderComponentDefaults(this.component, this.element);
         Echo.Sync.Border.render(this.component.render("border"), this.element);
@@ -375,6 +376,7 @@ Echo.Sync.Row = Core.extend(Echo.Sync.ArrayContainer, {
     renderAdd: function(update, parentElement) {
         this.element = Echo.Sync.Row._rowPrototype.cloneNode(true);
         this.element.id = this.component.renderId;
+        this.element.className = this.component.render("cssClasses", "");
 
         Echo.Sync.renderComponentDefaults(this.component, this.element);
         Echo.Sync.Border.render(this.component.render("border"), this.element);

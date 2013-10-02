@@ -538,6 +538,7 @@ Echo.ComponentFactory = {
  * @sp {#Color} background the background color
  * @sp {#Font} font the component font
  * @sp {#Color} foreground the foreground color
+ * @sp {#String} class the HTML class for CSS-based customization
  * @sp layoutData layout data information, describing how the component should be rendered by its container 
  * @event property An event fired when the a property of the component changes.  The <code>propertyName</code> property
  *        will specify the name of the changed property.  The <code>oldValue</code> and <code>newValue</code> properties

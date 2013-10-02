@@ -99,25 +99,31 @@ Echo.Sync.Button = Core.extend(Echo.Render.ComponentSync, {
          */
         renderContent: function() {
             var text = this.component.render("text");
-            var icon = Echo.Sync.getEffectProperty(this.component, "icon", "disabledIcon", !this.enabled);
-            if (text != null) {
-                if (icon) {
-                    // Text and icon.
-                    var iconTextMargin = this.component.render("iconTextMargin", 
-                            Echo.Sync.Button._defaultIconTextMargin);
-                    var orientation = Echo.Sync.TriCellTable.getOrientation(this.component, "textPosition");
-                    var tct = new Echo.Sync.TriCellTable(orientation, 
-                            Echo.Sync.Extent.toPixels(iconTextMargin));
-                    this.renderButtonText(tct.tdElements[0], text);
-                    this.iconImg = this.renderButtonIcon(tct.tdElements[1], icon);
-                    this.div.appendChild(tct.tableElement);
-                } else {
-                    // Text only.
+            if (!this.div.className) {
+                var icon = Echo.Sync.getEffectProperty(this.component, "icon", "disabledIcon", !this.enabled);
+                if (text != null) {
+                    if (icon) {
+                        // Text and icon.
+                        var iconTextMargin = this.component.render("iconTextMargin",
+                                Echo.Sync.Button._defaultIconTextMargin);
+                        var orientation = Echo.Sync.TriCellTable.getOrientation(this.component, "textPosition");
+                        var tct = new Echo.Sync.TriCellTable(orientation,
+                                Echo.Sync.Extent.toPixels(iconTextMargin));
+                        this.renderButtonText(tct.tdElements[0], text);
+                        this.iconImg = this.renderButtonIcon(tct.tdElements[1], icon);
+                        this.div.appendChild(tct.tableElement);
+                    } else {
+                        // Text only.
+                        this.renderButtonText(this.div, text);
+                    }
+                } else if (icon) {
+                    // Icon only.
+                    this.iconImg = this.renderButtonIcon(this.div, icon);
+                }
+            } else {
+                if (text) {
                     this.renderButtonText(this.div, text);
                 }
-            } else if (icon) {
-                // Icon only.
-                this.iconImg = this.renderButtonIcon(this.div, icon);
             }
         },
 
@@ -135,33 +141,43 @@ Echo.Sync.Button = Core.extend(Echo.Render.ComponentSync, {
             var ep = pressed ? "pressed" : (rollover ? "rollover" : "focused");
             var state = focused || pressed || rollover;
 
-            var foreground = Echo.Sync.getEffectProperty(this.component, "foreground", ep + "Foreground", state);
-            var background = Echo.Sync.getEffectProperty(this.component, "background", ep + "Background", state);
-            var backgroundImage = Echo.Sync.getEffectProperty(
-                    this.component, "backgroundImage", ep + "BackgroundImage", state);
-            var font = Echo.Sync.getEffectProperty(this.component, "font", ep + "Font", state);
-            var border = Echo.Sync.getEffectProperty(this.component, "border", ep + "Border", state);
-            
-            Echo.Sync.Color.renderClear(foreground, this.div, "color");
-            Echo.Sync.Color.renderClear(background, this.div, "backgroundColor");
-            Echo.Sync.FillImage.renderClear(backgroundImage, this.div, "backgroundColor");
-            
-            if (state) {
-                Echo.Sync.Insets.render(this.getInsetsForBorder(this.component.render(ep + "Border")), this.div, "padding");
-            } else {
-                Echo.Sync.Insets.render(this.component.render("insets"), this.div, "padding");
-            }
-            Echo.Sync.Border.renderClear(border, this.div);
+            var cssClasses = this.component.render('cssClasses', '');
 
-            if (this._textElement) {
-                Echo.Sync.Font.renderClear(font, this._textElement);
-            }
-            
-            if (this.iconImg) {
-                var iconUrl = Echo.Sync.ImageReference.getUrl(
-                        Echo.Sync.getEffectProperty(this.component, "icon", ep + "Icon", state));
-                if (iconUrl != this.iconImg.src) {
-                    this.iconImg.src = iconUrl;
+            if (!cssClasses) {
+                var foreground = Echo.Sync.getEffectProperty(this.component, "foreground", ep + "Foreground", state);
+                var background = Echo.Sync.getEffectProperty(this.component, "background", ep + "Background", state);
+                var backgroundImage = Echo.Sync.getEffectProperty(
+                        this.component, "backgroundImage", ep + "BackgroundImage", state);
+                var font = Echo.Sync.getEffectProperty(this.component, "font", ep + "Font", state);
+                var border = Echo.Sync.getEffectProperty(this.component, "border", ep + "Border", state);
+
+                Echo.Sync.Color.renderClear(foreground, this.div, "color");
+                Echo.Sync.Color.renderClear(background, this.div, "backgroundColor");
+                Echo.Sync.FillImage.renderClear(backgroundImage, this.div, "backgroundColor");
+
+                if (state) {
+                    Echo.Sync.Insets.render(this.getInsetsForBorder(this.component.render(ep + "Border")), this.div, "padding");
+                } else {
+                    Echo.Sync.Insets.render(this.component.render("insets"), this.div, "padding");
+                }
+                Echo.Sync.Border.renderClear(border, this.div);
+
+                if (this._textElement) {
+                    Echo.Sync.Font.renderClear(font, this._textElement);
+                }
+
+                if (this.iconImg) {
+                    var iconUrl = Echo.Sync.ImageReference.getUrl(
+                            Echo.Sync.getEffectProperty(this.component, "icon", ep + "Icon", state));
+                    if (iconUrl != this.iconImg.src) {
+                        this.iconImg.src = iconUrl;
+                    }
+                }
+            } else {
+                if (state) {
+                    this.div.className = cssClasses + ' ' + ep;
+                } else {
+                    this.div.className = cssClasses;
                 }
             }
         }
@@ -336,39 +352,43 @@ Echo.Sync.Button = Core.extend(Echo.Render.ComponentSync, {
         
         this.div = Echo.Sync.Button._prototypeButton.cloneNode(false); 
         this.div.id = this.component.renderId;
+        this.div.className = this.component.render("cssClasses", "");
 
-        Echo.Sync.LayoutDirection.render(this.component.getLayoutDirection(), this.div);
-        if (this.enabled) {
-            Echo.Sync.Color.renderFB(this.component, this.div);
-            Echo.Sync.Border.render(this.component.render("border"), this.div);
-            Echo.Sync.FillImage.render(this.component.render("backgroundImage"), this.div);
-        } else {
-            this.div.style.cursor = "auto";
-            Echo.Sync.Color.render(Echo.Sync.getEffectProperty(this.component, "foreground", "disabledForeground", true), 
-                    this.div, "color");
-            Echo.Sync.Color.render(Echo.Sync.getEffectProperty(this.component, "background", "disabledBackground", true), 
-                    this.div, "backgroundColor");
-            Echo.Sync.Border.render(Echo.Sync.getEffectProperty(this.component, "border", "disabledBorder", true), 
-                    this.div);
-            Echo.Sync.FillImage.render(Echo.Sync.getEffectProperty(this.component, 
-                    "backgroundImage", "disabledBackgroundImage", true), this.div);
+        if (!this.div.className) {
+            Echo.Sync.LayoutDirection.render(this.component.getLayoutDirection(), this.div);
+            if (this.enabled) {
+                Echo.Sync.Color.renderFB(this.component, this.div);
+                Echo.Sync.Border.render(this.component.render("border"), this.div);
+                Echo.Sync.FillImage.render(this.component.render("backgroundImage"), this.div);
+            } else {
+                this.div.style.cursor = "auto";
+                Echo.Sync.Color.render(Echo.Sync.getEffectProperty(this.component, "foreground", "disabledForeground", true),
+                        this.div, "color");
+                Echo.Sync.Color.render(Echo.Sync.getEffectProperty(this.component, "background", "disabledBackground", true),
+                        this.div, "backgroundColor");
+                Echo.Sync.Border.render(Echo.Sync.getEffectProperty(this.component, "border", "disabledBorder", true),
+                        this.div);
+                Echo.Sync.FillImage.render(Echo.Sync.getEffectProperty(this.component,
+                        "backgroundImage", "disabledBackgroundImage", true), this.div);
+            }
+
+            Echo.Sync.Insets.render(this.component.render("insets"), this.div, "padding");
+            Echo.Sync.Alignment.render(this.component.render("alignment"), this.div, true, this.component);
+
+            var width = this.component.render("width");
+            if (width) {
+                this.div.style.width = Echo.Sync.Extent.toCssValue(width, true, true);
+            }
+            var height = this.component.render("height");
+            if (height) {
+                this.div.style.height = Echo.Sync.Extent.toCssValue(height, false);
+                this.div.style.overflow = "hidden";
+            }
         }
-        
-        Echo.Sync.Insets.render(this.component.render("insets"), this.div, "padding");
-        Echo.Sync.Alignment.render(this.component.render("alignment"), this.div, true, this.component);
-        
+
         var toolTipText = this.component.render("toolTipText");
         if (toolTipText) {
             this.div.title = toolTipText;
-        }
-        var width = this.component.render("width");
-        if (width) {
-            this.div.style.width = Echo.Sync.Extent.toCssValue(width, true, true);
-        }
-        var height = this.component.render("height");
-        if (height) {
-            this.div.style.height = Echo.Sync.Extent.toCssValue(height, false);
-            this.div.style.overflow = "hidden";
         }
         
         this.renderContent();

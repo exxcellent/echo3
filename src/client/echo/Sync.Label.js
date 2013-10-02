@@ -54,7 +54,7 @@ Echo.Sync.Label = Core.extend(Echo.Render.ComponentSync, {
             background = this.component.render("background"),
             toolTip = this.component.render("toolTipText"),
             img;
-    
+
         if (text != null) {
             var lineWrap = this.component.render("lineWrap", true);
             var formatWhitespace = this.component.render("formatWhitespace", false) &&
@@ -79,16 +79,18 @@ Echo.Sync.Label = Core.extend(Echo.Render.ComponentSync, {
                 tct.tdElements[1].appendChild(img);
                 this._node = tct.tableElement;
                 this._node.id = this.component.renderId;
+                this._node.className = this.component.render("cssClasses", "");
                 Echo.Sync.renderComponentDefaults(this.component, this._node);
             } else {
                 // Text without icon.
                 var font = this.component.render("font");
-                if (!this.client.designMode && !toolTip && !font && lineWrap && !foreground && !background && 
+                if (!this.client.designMode && !toolTip && !font && lineWrap && !foreground && !background &&
                         !formatWhitespace && !this.component.getLayoutDirection()) {
                     this._node = document.createTextNode(text);
                 } else {
                     this._node = document.createElement("span");
                     this._node.id = this.component.renderId;
+                    this._node.className = this.component.render("cssClasses", "");
                     if (formatWhitespace) {
                         this._formatWhitespace(text, this._node);
                     } else {
@@ -105,6 +107,7 @@ Echo.Sync.Label = Core.extend(Echo.Render.ComponentSync, {
             Echo.Sync.ImageReference.renderImg(icon, img);
             this._node = document.createElement("span");
             this._node.id = this.component.renderId;
+            this._node.className = this.component.render("cssClasses", "");
             this._node.appendChild(img);
             Echo.Sync.Color.render(this.component.render("background"), this._node, "backgroundColor");
         } else {
@@ -112,6 +115,7 @@ Echo.Sync.Label = Core.extend(Echo.Render.ComponentSync, {
             if (this.client.designMode) {
                 this._node = document.createElement("span");
                 this._node.id = this.component.renderId;
+                this._node.className = this.component.render("cssClasses", "");
             } else {
                 this._node = null;
             }
