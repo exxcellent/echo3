@@ -156,7 +156,7 @@ Echo.Sync.ToggleButton = Core.extend(Echo.Sync.Button, {
             stateElement.disabled = !this.enabled;
 
             var cssClasses = this.component.render('cssClasses', '');
-            this.div.className = cssClasses + (this._selected ? ' selected' : '') + (this.disabled ? ' disabled': '');
+            this.div.className = cssClasses + (this._selected ? ' selected' : '') + (!this.enabled ? ' disabled': '');
 
             Core.Web.Event.add(stateElement, "change", Core.method(this, this._processStateChange), false);
             Core.Web.Event.add(this.div, "click", Core.method(this, this._processStateChange), false);
@@ -202,7 +202,7 @@ Echo.Sync.ToggleButton = Core.extend(Echo.Sync.Button, {
                 }
             }
         } else {
-            this.div.className = cssClasses + (this._selected ? ' selected' : '') + (rollover ? ' rollover' : '') + (pressed ? ' pressed' : '');
+            this.div.className = cssClasses + (this._selected ? ' selected' : '') + (rollover ? ' rollover' : '') + (pressed ? ' pressed' : '') + (this.enabled ? '': ' disabled');
         }
     },
     
@@ -235,7 +235,7 @@ Echo.Sync.ToggleButton = Core.extend(Echo.Sync.Button, {
             }
         } else {
             this._stateElement.checked = this._selected ? true : false;
-            this.div.className = cssClasses + (this._selected ? ' selected' : '');
+            this.div.className = cssClasses + (this._selected ? ' selected' : '') + (this.enabled ? '': ' disabled');
         }
     }
 });
