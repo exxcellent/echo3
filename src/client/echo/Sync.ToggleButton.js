@@ -156,7 +156,7 @@ Echo.Sync.ToggleButton = Core.extend(Echo.Sync.Button, {
             stateElement.disabled = !this.enabled;
 
             var cssClasses = this.component.render('cssClasses', '');
-            this.div.className = cssClasses + (this._selected ? ' selected' : '');
+            this.div.className = cssClasses + (this._selected ? ' selected' : '') + (this.disabled ? ' disabled': '');
 
             Core.Web.Event.add(stateElement, "change", Core.method(this, this._processStateChange), false);
             Core.Web.Event.add(this.div, "click", Core.method(this, this._processStateChange), false);
