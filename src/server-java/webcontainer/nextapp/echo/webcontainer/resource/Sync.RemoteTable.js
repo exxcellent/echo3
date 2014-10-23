@@ -95,13 +95,12 @@ Echo.Sync.RemoteTableSync = Core.extend(Echo.Render.ComponentSync, {
             var mouseEnterLeaveSupport = Core.Web.Env.PROPRIETARY_EVENT_MOUSE_ENTER_LEAVE_SUPPORTED;
             var enterEvent = mouseEnterLeaveSupport ? "mouseenter" : "mouseover";
             var exitEvent = mouseEnterLeaveSupport ? "mouseleave" : "mouseout";
-            var rowOffset = (this._headerVisible ? 1 : 0);
             var rolloverEnterRef = Core.method(this, this._processRolloverEnter);
             var rolloverExitRef = Core.method(this, this._processRolloverExit);
             var clickRef = Core.method(this, this._processClick);
             
             for (var rowIndex = 0; rowIndex < this._rowCount; ++rowIndex) {
-                var tr = this._table.rows[rowIndex + rowOffset];
+                var tr = this._tbody.rows[rowIndex];
                 if (this._rolloverEnabled) {
                     Core.Web.Event.add(tr, enterEvent, rolloverEnterRef, false);
                     Core.Web.Event.add(tr, exitEvent, rolloverExitRef, false);
@@ -150,16 +149,15 @@ Echo.Sync.RemoteTableSync = Core.extend(Echo.Render.ComponentSync, {
     },
 
     /**
-     * Returns the table row index of the given TR element,
-     * accounting for header visibility.
-     * 
+     * Returns the table row index of the given TR element.
+     *
      * @param {Element} element the TR table row element
      * @return the index of the specified row, or -1 if it cannot be found
      * @type Number
      */
     _getRowIndex: function(element) {
         var testElement = this._tbody.firstChild;
-        var index = this._headerVisible ? -1 : 0;
+        var index = 0;
         while (testElement) {
             if (testElement == element) {
                 return index;
@@ -302,7 +300,8 @@ Echo.Sync.RemoteTableSync = Core.extend(Echo.Render.ComponentSync, {
                 this._div.style.zoom = 1;
             }
         }
-        
+
+
         this._tbody = document.createElement("tbody");
         
         if (this.component.render("columnWidth")) {
@@ -330,16 +329,18 @@ Echo.Sync.RemoteTableSync = Core.extend(Echo.Render.ComponentSync, {
             }
             this._table.appendChild(colGroupElement);
         }
-        
+
+        var trPrototype = this._createRowPrototype();
+
+        if (this._headerVisible) {
+            this._thead = document.createElement("thead");
+            this._table.appendChild(this._thead);
+            this._thead.appendChild(this._renderRow(update, Echo.Sync.RemoteTableSync._HEADER_ROW, trPrototype));
+        }
         this._table.appendChild(this._tbody);
         this._div.appendChild(this._table);
         parentElement.appendChild(this._div);
-        
-        var trPrototype = this._createRowPrototype();
-        
-        if (this._headerVisible) {
-            this._tbody.appendChild(this._renderRow(update, Echo.Sync.RemoteTableSync._HEADER_ROW, trPrototype));
-        }
+
         for (var rowIndex = 0; rowIndex < this._rowCount; rowIndex++) {
             this._tbody.appendChild(this._renderRow(update, rowIndex, trPrototype));
         }
@@ -356,15 +357,13 @@ Echo.Sync.RemoteTableSync = Core.extend(Echo.Render.ComponentSync, {
         this._columnWidths = null;
         if (this._rolloverEnabled || this._selectionEnabled) {
             var tr = this._tbody.firstChild;
-            if (this._headerVisible) {
-                tr = tr.nextSibling;
-            }
             while (tr) {
                 Core.Web.Event.removeAll(tr);
                 tr = tr.nextSibling;
             }
         }
         this._table = null;
+        this._thead = null;
         this._tbody = null;
     },
     
@@ -374,7 +373,7 @@ Echo.Sync.RemoteTableSync = Core.extend(Echo.Render.ComponentSync, {
      * @param {Number} rowIndex the index of the row
      */
     _renderRowStyle: function(rowIndex) {
-        var tableRowIndex = rowIndex + (this._headerVisible ? 1 : 0);
+        var tableRowIndex = rowIndex;
         if (tableRowIndex >= this._tbody.childNodes.length) {
             return;
         }
